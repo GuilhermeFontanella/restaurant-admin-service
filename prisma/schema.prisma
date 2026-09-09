@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AdminUser {
+  id       String   @id @default(uuid())
+  nome     String
+  email    String   @unique
+  senha    String
+  ativo    Boolean  @default(true)
+  criadoEm DateTime @default(now())
+
+  @@map("admin_users")
+}
+
+enum LeadStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Lead {
+  id                  String      @id @default(uuid())
+  nomeEstabelecimento String
+  cnpj                String?
+  nomeDono            String
+  emailContato        String
+  telefoneContato     String
+  endereco            String?
+  cidade              String?
+  uf                  String?
+  planoInteresseId    String?
+  mensagem            String?
+  status              LeadStatus  @default(PENDING)
+  motivoRejeicao      String?
+  restaurant          Restaurant?
+  criadoEm            DateTime    @default(now())
+  respondidoEm        DateTime?
+
+  @@map("leads")
+}
+
+enum RestaurantStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELLED
+}
+
+model Restaurant {
+  id              String           @id @default(uuid())
+  nomeFantasia    String
+  razaoSocial     String?
+  cnpj            String           @unique
+  enderecoRua     String?
+  enderecoNumero  String?
+  bairro          String?
+  cidade          String?
+  uf              String?
+  cep             String?
+  donoNome        String
+  donoCpf         String?
+  donoEmail       String
+  donoTelefone    String
+  contatoNome     String?
+  contatoEmail    String?
+  contatoTelefone String?
+  tenantSlug      String           @unique
+  status          RestaurantStatus @default(TRIAL)
+  lead            Lead?            @relation(fields: [leadId], references: [id])
+  leadId          String?          @unique
+  subscription    Subscription?
+  criadoEm        DateTime         @default(now())
+  atualizadoEm    DateTime         @updatedAt
+
+  @@map("restaurants")
+}
+
+model Plan {
+  id            String         @id @default(uuid())
+  nome          String
+  descricao     String?
+  preco         Decimal
+  periodicidade String
+  ativo         Boolean        @default(true)
+  subscriptions Subscription[]
+  criadoEm      DateTime       @default(now())
+
+  @@map("plans")
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  restaurant           Restaurant         @relation(fields: [restaurantId], references: [id])
+  restaurantId         String             @unique
+  plan                 Plan?              @relation(fields: [planId], references: [id])
+  planId               String?
+  status               SubscriptionStatus @default(TRIAL)
+  trialStartsAt        DateTime
+  trialEndsAt          DateTime
+  subscriptionStartsAt DateTime?
+  currentPeriodEnd     DateTime?
+  criadoEm             DateTime           @default(now())
+  atualizadoEm         DateTime           @updatedAt
+
+  @@map("subscriptions")
+}
