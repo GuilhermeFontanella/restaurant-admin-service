@@ -28,19 +28,44 @@ export class KitchenServiceClient {
     private readonly http: HttpService,
     config: ConfigService,
   ) {
-    this.baseUrl = config.get<string>('KITCHEN_SERVICE_URL', 'http://localhost:3000');
+    this.baseUrl = config.get<string>(
+      'KITCHEN_SERVICE_URL',
+      'http://localhost:3000',
+    );
     this.apiKey = config.get<string>('KITCHEN_SERVICE_INTERNAL_API_KEY', '');
   }
 
-  async createTenant(params: CreateTenantParams): Promise<CreateTenantResponse> {
-    return this.request<CreateTenantResponse>('post', '/internal/tenants', params);
+  async createTenant(
+    params: CreateTenantParams,
+  ): Promise<CreateTenantResponse> {
+    return this.request<CreateTenantResponse>(
+      'post',
+      '/internal/tenants',
+      params,
+    );
   }
 
   async setTenantAtivo(slug: string, ativo: boolean): Promise<void> {
-    await this.request('patch', `/internal/tenants/${encodeURIComponent(slug)}`, { ativo });
+    await this.request(
+      'patch',
+      `/internal/tenants/${encodeURIComponent(slug)}`,
+      { ativo },
+    );
   }
 
-  private async request<T>(method: 'post' | 'patch', path: string, data: unknown): Promise<T> {
+  async deleteTenant(slug: string): Promise<void> {
+    await this.request(
+      'delete',
+      `/internal/tenants/${encodeURIComponent(slug)}`,
+      undefined,
+    );
+  }
+
+  private async request<T>(
+    method: 'post' | 'patch' | 'delete',
+    path: string,
+    data?: unknown,
+  ): Promise<T> {
     try {
       const response = await firstValueFrom(
         this.http.request<T>({
@@ -54,8 +79,12 @@ export class KitchenServiceClient {
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string | string[] }>;
       const message = axiosError.response?.data?.message ?? axiosError.message;
-      this.logger.error(`Falha ao chamar kitchen-service (${method.toUpperCase()} ${path}): ${message}`);
-      throw new BadGatewayException(`Falha ao comunicar com o order-manager: ${message}`);
+      this.logger.error(
+        `Falha ao chamar kitchen-service (${method.toUpperCase()} ${path}): ${message}`,
+      );
+      throw new BadGatewayException(
+        `Falha ao comunicar com o order-manager: ${message}`,
+      );
     }
   }
 }

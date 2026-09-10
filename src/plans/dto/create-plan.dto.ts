@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
+import { IsArray, IsIn, IsInt, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
 
 export class CreatePlanDto {
   @ApiProperty()
@@ -11,6 +11,30 @@ export class CreatePlanDto {
   @IsOptional()
   @IsString()
   descricao?: string;
+
+  @ApiProperty({ required: false, type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  features?: string[];
+
+  @ApiProperty({ required: false, description: 'null = ilimitado' })
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  limiteMesas?: number;
+
+  @ApiProperty({ required: false, description: 'null = ilimitado' })
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  limiteUsuarios?: number;
+
+  @ApiProperty({ required: false, description: 'null = ilimitado' })
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  limiteProdutos?: number;
 
   @ApiProperty()
   @IsNumber()
